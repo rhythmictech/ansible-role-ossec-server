@@ -1,0 +1,55 @@
+---
+
+########################################
+# OSSEC Server general settings
+########################################
+ossec_server_config: []
+ossec_agent_configs: []
+ossec_server_fqdn: "ossec-server"
+ossec_server_atomic_release: 1.0-21
+
+# Note that in production, you may not want this to be True and instead
+# may want to place this key manually.
+ossec_server_generate_cert: True
+
+########################################
+# OSSEC Server packages/locations
+########################################
+
+# these probably don't need to change.. but you can if you want
+ossec_server_gpg_key_url: "https://www.atomicorp.com/RPM-GPG-KEY.atomicorp.txt"
+
+# Distribution-specific vars
+ossec_server_distro_vars:
+  amazon:
+    cis_distribution_filename: cis_rhel7_linux_rcl.txt
+    mirror_list: "https://updates.atomicorp.com/channels/mirrorlist/atomic/amazon-{{ ansible_distribution_major_version }}-x86_64"
+    packages:
+      - ossec-hids-server
+  centos:
+    # 7/8 use the same file
+    cis_distribution_filename: cis_rhel_linux_rcl.txt
+    mirror_list: "https://updates.atomicorp.com/channels/mirrorlist/atomic/centos-{{ ansible_distribution_major_version }}-x86_64"
+    packages:
+      - ossec-hids
+      - ossec-hids-server
+  debian: 
+    cis_distribution_filename: cis_debian_linux_rcl.txt
+    packages:
+      - ossec-hids-server
+    repo_server: "https://updates.atomicorp.com/channels/atomic/{{ ansible_distribution | lower }}"
+  rhel:
+    cis_distribution_filename: cis_rhel7_linux_rcl.txt
+    mirror_list: "https://updates.atomicorp.com/channels/mirrorlist/atomic/redhad-{{ ansible_distribution_major_version }}-x86_64"
+    packages:
+      - ossec-hids
+      - ossec-hids-server
+  ubuntu: 
+    cis_distribution_filename: cis_debian_linux_rcl.txt
+    packages:
+      - ossec-hids-server
+    repo_server: "https://updates.atomicorp.com/channels/atomic/{{ ansible_distribution | lower }}"
+
+ossec_filename: "atomic-release-{{ ossec_server_atomic_release }}.el{{ ansible_distribution_major_version }}.art.noarch.rpm"
+ossec_download_url: "{{ ossec_url }}/{{ ossec_filename }}"
+ossec_server_rootcheck_url: "https://raw.githubusercontent.com/ossec/ossec-hids/master/src/rootcheck/db"

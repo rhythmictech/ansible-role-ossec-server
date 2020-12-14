@@ -1,0 +1,20 @@
+---
+
+- name: "ossec_server | amazon | Add Atomiccorp OSSEC repo"
+  yum_repository:
+    name: atomic
+    description: Atomicorp Amazon Linux - atomic
+    gpgkey: "{{ ossec_server_gpg_key_url }}"
+    mirrorlist: "{{ ossec_server_distro_vars[ansible_distribution|lower]['mirror_list'] }}"
+  tags: ['ossec-server']
+
+- name: "ossec_server | amazon | ensure ossec packages are installed"
+  yum: name="{{ ossec_server_distro_vars[ansible_distribution|lower]['packages'] }}" state="present"
+  tags: ['ossec-server']
+
+- name: "ossec_server | amazon | Set ossec deploy facts"
+  set_fact:
+    ossec_server_config_filename: ossec-server.conf
+    ossec_init_name: ossec-hids
+    ossec_authd_init_name: ossec-hids-authd
+  tags: ['ossec-server']

@@ -1,0 +1,32 @@
+---
+
+# some ubuntu images don't have this installed by default
+- name: "ossec_server | debian | Install gpg-agent"
+  apt:
+    pkg: "gpg-agent"
+    state: present
+  tags: ['ossec-server']
+
+- name: "debian | Installing repository key"
+  apt_key:
+    url: "{{ ossec_server_gpg_key_url }}"
+  tags: ['ossec-server']
+
+- name: "ossec_server | debian | Installing repository"
+  apt_repository:
+    repo: "deb {{ ossec_server_distro_vars[ansible_distribution|lower]['repo_server'] }} {{ ansible_distribution_release }} main"
+    state: present
+  tags: ['ossec-server']
+
+- name: "ossec_server | debian | Install ossec-hids"
+  apt:
+    pkg: "{{ ossec_server_distro_vars[ansible_distribution|lower]['packages'] }}"
+    state: present
+  tags: ['ossec-server']
+
+- name: "ossec_server | debian | Set ossec deploy facts for Debian"
+  set_fact:
+    ossec_server_config_filename: ossec.conf
+    ossec_init_name: ossec
+    ossec_authd_init_name: ossec
+  tags: ['ossec-server']

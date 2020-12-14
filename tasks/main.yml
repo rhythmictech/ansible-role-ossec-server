@@ -1,0 +1,152 @@
+---
+- include: amazon.yml
+  when: ansible_distribution == 'Amazon'
+
+- include: centos.yml
+  when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+
+- include: debian.yml
+  when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+
+- name: "ossec_server | Install CIS Root Checks"
+  get_url:
+    url: "{{ ossec_server_rootcheck_url }}/{{ ossec_server_distro_vars[ansible_distribution|lower]['cis_distribution_filename'] }}"
+    dest: "/var/ossec/etc/shared/{{ ossec_server_distro_vars[ansible_distribution|lower]['cis_distribution_filename'] }}"
+    mode: 0660
+    owner: root
+    group: ossec
+  tags: ["ossec-server"]
+
+- name: "ossec_server | Generate SSL files"
+  command: "openssl req -x509 -sha256 -nodes -days 365 -newkey rsa:1825 -keyout sslmanager.key -out sslmanager.cert -subj /CN={{ ossec_server_fqdn }}/"
+  args:
+    creates: sslmanager.cert
+    chdir: /var/ossec/etc/
+  when: ossec_server_generate_cert
+  tags: ["ossec-server", "ossec-server-config"]
+
+- name: "ossec_server | Installing SSL files."
+  file:
+    path: /var/ossec/etc/{{ item }}
+    owner: root
+    group: root
+    mode: 0660
+  with_items:
+    - sslmanager.key
+    - sslmanager.cert
+  when: ossec_server_generate_cert
+  tags: ["ossec-server", "ossec-server-config"]
+
+- name: "ossec_server | Configure the shared-agent.conf"
+  template:
+    src: var-ossec-etc-shared-agent.conf.j2
+    dest: /var/ossec/etc/shared/agent.conf
+    owner: ossec
+    group: ossec
+    mode: 0644
+  notify:
+    - restart ossec-server
+  tags: ["ossec-server", "ossec-server-config"]
+
+- name: "ossec_server | Installing custom local_rules.xml"
+  template:
+    src: "{{ playbook_dir }}/{{ ossec_server_config.local_rules_template }}"
+    dest: /var/ossec/rules/local_rules.xml
+    owner: root
+    group: root
+    mode: 0644
+  when:
+    - ossec_server_config.local_rules_template is defined
+  notify:
+    - restart ossec-server
+  tags: ["ossec-server", "ossec-server-config", "ossec-server-rules"]
+
+- name: "ossec_server | Installing the local_rules.xml (default local_rules.xml)"
+  template:
+    src: var-ossec-rules-local_rules.xml.j2
+    dest: /var/ossec/rules/local_rules.xml
+    owner: root
+    group: root
+    mode: 0644
+  when:
+    - ossec_server_config.local_rules_template is not defined
+  notify:
+    - restart ossec-server
+  tags: ["ossec-server", "ossec-server-config", "ossec-server-rules"]
+
+- name: "ossec_server | Configure the ossec-server"
+  template:
+    src: var-ossec-etc-ossec-server.conf.j2
+    dest: /var/ossec/etc/{{ ossec_server_config_filename }}
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - restart ossec-server
+  tags: ["ossec-server", "ossec-server-config"]
+
+- name: "ossec_server | Check if client-syslog is enabled"
+  shell: |
+    set -o pipefail
+    "/var/ossec/bin/ossec-control status | grep -c 'ossec-csyslogd is running' | xargs echo"
+  register: csyslog_running
+  changed_when: False
+  check_mode: False
+  args:
+    executable: /bin/bash
+  when:
+    - ossec_server_config.syslog_outputs is defined
+
+- name: "ossec_server | Enable client-syslog if not running and ossec_server_config.syslog_outputs is given"
+  command: /var/ossec/bin/ossec-control enable client-syslog
+  when:
+    - ossec_server_config.syslog_outputs is defined
+    - csyslog_running.stdout == '0'
+
+- name: "ossec_server | Start client-syslog if not running and ossec_server_config.syslog_outputs is given"
+  command: /var/ossec/bin/ossec-control start client-syslog
+  when:
+    - ossec_server_config.syslog_outputs is defined
+    - csyslog_running.stdout == '0'
+
+# - name: "ossec_server | Write ossec-authd init file"
+#   template:
+#     src: ossec-authd-init.service
+#     dest: /etc/init.d/ossec-authd
+#     owner: root
+#     group: root
+#     mode: 0755
+#   when:
+#     - ansible_service_mgr == "upstart"
+#     - ansible_os_family != "CoreOS"
+#   tags:
+#     - init
+#     - config
+
+# - name: "ossec_server | Write ossec-authd systemd file"
+#   template:
+#     src: ossec-authd.service
+#     dest: /lib/systemd/system/ossec-authd.service
+#   when:
+#     - ansible_service_mgr == "systemd"
+#     - ansible_os_family != "CoreOS"
+#     - ansible_os_family != "RedHat"
+#   notify: systemd daemon-reload
+#   tags:
+#     - init
+#     - config
+
+- name: "ossec_server | Remove pidfile line from startup script (breaks systemd controlled rc script)"
+  lineinfile:
+    dest: /etc/rc.d/init.d/ossec-hids-authd
+    regex: '^# pidfile:'
+    state: absent
+  when:
+    - ansible_service_mgr == "systemd"
+    - ansible_os_family == "RedHat"
+
+- name: "ossec_server | Ensure ossec authd service is started and enabled"
+  service:
+    name: "{{ ossec_authd_init_name }}"
+    enabled: yes
+    state: started

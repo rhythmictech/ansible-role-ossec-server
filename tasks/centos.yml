@@ -1,0 +1,49 @@
+---
+- name: "ossec_server | centos | Set RHEL to expected name"
+  set_fact:
+    ansible_distribution: "rhel"
+  when: ansible_distribution == "RedHat" or ansible_distribution == 'Red Hat Enterprise Linux'
+  tags: ['ossec-server']
+
+- name: "ossec_server | centos | Add Atomiccorp OSSEC repo"
+  yum_repository:
+    name: "atomic"
+    description: "Atomicorp {{ ansible_distribution }} - atomic"
+    gpgkey: "{{ ossec_server_gpg_key_url }}"
+    mirrorlist: "{{ ossec_server_distro_vars[ansible_distribution|lower]['mirror_list'] }}"
+  tags: ['ossec-server']
+
+- name: "ossec_server | centos | Add EPEL repo (CentOS/RedHat 7)"
+  yum:
+    name: "epel-release"
+    state: "present"
+  when: ansible_distribution_major_version == "7"
+  tags: ['ossec-server']
+
+- name: "ossec_server | centos | Enable PowerTools repo (CentOS/RedHat 8)"
+  ini_file:
+    path: /etc/yum.repos.d/CentOS-PowerTools.repo
+    section: "PowerTools"
+    option: "enabled"
+    value: 1
+  when: ansible_distribution_major_version == "8"
+  tags: ['ossec-server']
+
+- name: "ossec_server | centos | Add EPEL repo (CentOS/RedHat 8)"
+  dnf:
+    name: epel-release
+    state: latest
+    update_cache: yes
+  when: ansible_distribution_major_version == "8"
+  tags: ['ossec-server']
+
+- name: "ossec_server | centos | ensure ossec packages are installed"
+  yum: name="{{ ossec_server_distro_vars[ansible_distribution|lower]['packages'] }}" state="present"
+  tags: ['ossec-server']
+
+- name: "ossec_server | centos | Set ossec deploy facts for CentOS/RedHat"
+  set_fact:
+    ossec_server_config_filename: ossec-server.conf
+    ossec_init_name: ossec-hids
+    ossec_authd_init_name: ossec-hids-authd
+  tags: ['ossec-server']
