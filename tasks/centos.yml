@@ -20,15 +20,6 @@
   when: ansible_distribution_major_version == "7"
   tags: ['ossec-server']
 
-- name: "ossec_server | centos | Enable PowerTools repo (CentOS/RedHat 8)"
-  ini_file:
-    path: /etc/yum.repos.d/CentOS-PowerTools.repo
-    section: "PowerTools"
-    option: "enabled"
-    value: 1
-  when: ansible_distribution_major_version == "8"
-  tags: ['ossec-server']
-
 - name: "ossec_server | centos | Add EPEL repo (CentOS/RedHat 8)"
   dnf:
     name: epel-release
