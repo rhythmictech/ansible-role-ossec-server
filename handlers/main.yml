@@ -1,11 +1,11 @@
 ---
-- name: restart ossec-server
+- name: "restart ossec-server"
   service:
-    name: "{{ ossec_init_name }}"
-    state: restarted
+    name: "{{ ossec_server_service_name }}"
+    state: "restarted"
     enabled: yes
+  tags: ['ossec_server']
 
-- name: systemd daemon-reload
-  command: systemctl daemon-reload
-  tags:
-    - skip_ansible_lint
+- name: "systemd daemon-reload"
+  command: "systemctl daemon-reload"
+  tags: ['ossec_server', 'skip_ansible_lint']

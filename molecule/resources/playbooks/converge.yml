@@ -2,6 +2,10 @@
 - name: Converge
   hosts: all
   vars:
+    ossec_enable_service: True
+    ossec_start_service: True
+    ossec_enable_authd_service: True
+    ossec_start_authd_service: True
     ossec_server_config:
       mail_to:
         - noone@rhythmic.net

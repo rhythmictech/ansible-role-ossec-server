@@ -96,18 +96,21 @@
     executable: /bin/bash
   when:
     - ossec_server_config.syslog_outputs is defined
+  tags: ["ossec-server", "ossec-server-config"]
 
 - name: "ossec_server | Enable client-syslog if not running and ossec_server_config.syslog_outputs is given"
   command: /var/ossec/bin/ossec-control enable client-syslog
   when:
     - ossec_server_config.syslog_outputs is defined
     - csyslog_running.stdout == '0'
+  tags: ["ossec-server", "ossec-server-config"]
 
 - name: "ossec_server | Start client-syslog if not running and ossec_server_config.syslog_outputs is given"
   command: /var/ossec/bin/ossec-control start client-syslog
   when:
     - ossec_server_config.syslog_outputs is defined
     - csyslog_running.stdout == '0'
+  tags: ["ossec-server", "ossec-server-config"]
 
 # - name: "ossec_server | Write ossec-authd init file"
 #   template:
@@ -123,30 +126,29 @@
 #     - init
 #     - config
 
-# - name: "ossec_server | Write ossec-authd systemd file"
-#   template:
-#     src: ossec-authd.service
-#     dest: /lib/systemd/system/ossec-authd.service
-#   when:
-#     - ansible_service_mgr == "systemd"
-#     - ansible_os_family != "CoreOS"
-#     - ansible_os_family != "RedHat"
-#   notify: systemd daemon-reload
-#   tags:
-#     - init
-#     - config
-
-- name: "ossec_server | Remove pidfile line from startup script (breaks systemd controlled rc script)"
-  lineinfile:
-    dest: /etc/rc.d/init.d/ossec-hids-authd
-    regex: '^# pidfile:'
-    state: absent
+- name: "ossec_server | Write ossec-authd systemd file"
+  template:
+    src: ossec-authd.service
+    dest: /lib/systemd/system/ossec-authd.service
   when:
     - ansible_service_mgr == "systemd"
-    - ansible_os_family == "RedHat"
+  notify: systemd daemon-reload
+  tags: ["ossec-server"]
 
-- name: "ossec_server | Ensure ossec authd service is started and enabled"
-  service:
-    name: "{{ ossec_authd_init_name }}"
-    enabled: yes
-    state: started
+- name: "ossec_server | set service to desired enabled/disabled state"
+  service: name="{{ ossec_server_service_name }}" enabled="{{ ossec_enable_service }}"
+  tags: ["ossec-server"]
+
+- name: "ossec_server | start service if desired"
+  service: name="{{ ossec_server_service_name }}" state="started"
+  when: ossec_start_service
+  tags: ["ossec-server"]
+
+- name: "ossec_server | set authd service to desired enabled/disabled state"
+  service: name="{{ ossec_server_service_name }}" enabled="{{ ossec_enable_authd_service }}"
+  tags: ["ossec-server"]
+
+- name: "ossec_server | start authd service if desired"
+  service: name="{{ ossec_server_service_name }}" state="started"
+  when: ossec_start_authd_service
+  tags: ["ossec-server"]

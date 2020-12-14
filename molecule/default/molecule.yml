@@ -38,6 +38,7 @@ platforms:
   - name: ubuntu18
     image: docker.io/geerlingguy/docker-ubuntu1804-ansible
     pre_build_image: true
+    privileged: true
     command: /sbin/init
     tmpfs:
       - /run

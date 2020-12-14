@@ -44,6 +44,6 @@
 - name: "ossec_server | centos | Set ossec deploy facts for CentOS/RedHat"
   set_fact:
     ossec_server_config_filename: ossec-server.conf
-    ossec_init_name: ossec-hids
-    ossec_authd_init_name: ossec-hids-authd
+    ossec_server_service_name: ossec-hids
+    ossec_server_authd_service_name: ossec-hids-authd
   tags: ['ossec-server']

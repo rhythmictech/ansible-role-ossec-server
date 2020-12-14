@@ -27,6 +27,6 @@
 - name: "ossec_server | debian | Set ossec deploy facts for Debian"
   set_fact:
     ossec_server_config_filename: ossec.conf
-    ossec_init_name: ossec
-    ossec_authd_init_name: ossec
+    ossec_server_service_name: ossec
+    ossec_server_authd_service_name: ossec-authd
   tags: ['ossec-server']
