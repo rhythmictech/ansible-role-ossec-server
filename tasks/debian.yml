@@ -19,6 +19,11 @@
     state: present
   tags: ['ossec-server']
 
+- name: "ossec_server | debian | remove ossec agent if installed"
+  apt: pkg="ossec-hids-agent" state="absent"
+  when: ossec_server_uninstall_agent
+  tags: ['ossec-server']
+
 - name: "ossec_server | debian | Install ossec-hids"
   apt:
     pkg: "{{ ossec_server_distro_vars[ansible_distribution|lower]['packages'] }}"

@@ -8,6 +8,11 @@
     mirrorlist: "{{ ossec_server_distro_vars[ansible_distribution|lower]['mirror_list'] }}"
   tags: ['ossec-server']
 
+- name: "ossec_server | amazon | remove ossec agent if installed"
+  yum: name="ossec-hids-agent" state="absent"
+  when: ossec_server_uninstall_agent
+  tags: ['ossec-server']
+
 - name: "ossec_server | amazon | ensure ossec packages are installed"
   yum: name="{{ ossec_server_distro_vars[ansible_distribution|lower]['packages'] }}" state="present"
   tags: ['ossec-server']

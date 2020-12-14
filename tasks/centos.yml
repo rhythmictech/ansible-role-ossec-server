@@ -28,13 +28,11 @@
   when: ansible_distribution_major_version == "8"
   tags: ['ossec-server']
 
-- name: "ossec_server | centos | ensure ossec packages are installed"
-  yum: name="{{ ossec_server_distro_vars[ansible_distribution|lower]['packages'] }}" state="present"
+- name: "ossec_server | centos | remove ossec agent if installed"
+  yum: name="ossec-hids-agent" state="absent"
+  when: ossec_server_uninstall_agent
   tags: ['ossec-server']
 
-- name: "ossec_server | centos | Set ossec deploy facts for CentOS/RedHat"
-  set_fact:
-    ossec_server_config_filename: ossec-server.conf
-    ossec_server_service_name: ossec-hids
-    ossec_server_authd_service_name: ossec-hids-authd
+- name: "ossec_server | centos | ensure ossec packages are installed"
+  yum: name="{{ ossec_server_distro_vars[ansible_distribution|lower]['packages'] }}" state="present"
   tags: ['ossec-server']

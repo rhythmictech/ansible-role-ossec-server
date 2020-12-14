@@ -8,6 +8,10 @@ ossec_agent_configs: []
 ossec_server_fqdn: "ossec-server"
 ossec_server_atomic_release: 1.0-21
 
+# If the agent is installed the server cannot be for most distros.
+# By default, ansible will attempt to remove the agent if present.
+ossec_server_uninstall_agent: True
+
 # Note that in production, you may not want this to be True and instead
 # may want to place this key manually.
 ossec_server_generate_cert: True
@@ -16,7 +20,6 @@ ossec_server_generate_cert: True
 # First Run State
 ########################################
 
-# these will control netbox, nginx, redis and netbox-rq
 ossec_enable_service: False
 ossec_start_service: False
 
