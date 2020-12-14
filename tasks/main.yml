@@ -18,14 +18,14 @@
   tags: ["ossec-server"]
 
 - name: "ossec_server | Generate SSL files"
-  command: "openssl req -x509 -sha256 -nodes -days 365 -newkey rsa:1825 -keyout sslmanager.key -out sslmanager.cert -subj /CN={{ ossec_server_fqdn }}/"
+  command: "openssl req -x509 -sha256 -nodes -days 365 -newkey rsa:4096 -keyout sslmanager.key -out sslmanager.cert -subj /CN={{ ossec_server_fqdn }}/"
   args:
     creates: sslmanager.cert
     chdir: /var/ossec/etc/
   when: ossec_server_generate_cert
   tags: ["ossec-server", "ossec-server-config"]
 
-- name: "ossec_server | Installing SSL files."
+- name: "ossec_server | Install SSL files"
   file:
     path: /var/ossec/etc/{{ item }}
     owner: root
@@ -132,6 +132,7 @@
     dest: /lib/systemd/system/ossec-authd.service
   when:
     - ansible_service_mgr == "systemd"
+    - ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
   notify: systemd daemon-reload
   tags: ["ossec-server"]
 
