@@ -5,6 +5,7 @@
   apt:
     pkg: "gpg-agent"
     state: present
+    update_cache: yes
   tags: ['ossec-server']
 
 - name: "debian | Installing repository key"
