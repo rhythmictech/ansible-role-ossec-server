@@ -1,7 +1,7 @@
 ---
 
 port:
-  udp:1515:
+  tcp:1515:
     listening: true
     ip:
       - 0.0.0.0
